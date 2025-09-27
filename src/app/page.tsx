@@ -40,7 +40,7 @@ export default function Home() {
                 </ScrambleIn>
               </h1>
               <a
-                href="https://nand.io"
+                href="https://krea.ai"
                 target="_blank"
                 className="cursor-pointer border-b-2 border-transparent md:hover:border-foreground"
               >
@@ -51,7 +51,7 @@ export default function Home() {
                   className="whitespace-pre"
                 >
                   <span className="w-full whitespace-pre">
-                    design engineer @ studio nand{" "}
+                    design engineer @ krea{" "}
                     <span className="md:hidden text-[3vw] sm:text-sm pb-1 -ml-0.5 font-medium">
                       ↗
                     </span>

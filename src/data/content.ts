@@ -1,5 +1,10 @@
 export const experiences = [
   {
+    title: "design engineer, studio nand",
+    year: "‘24-‘25",
+    links: "https://nand.io"
+  },
+  {
     title: "ar developer, departd",
     year: "‘23-‘24",
     links: "https://departd.de"
