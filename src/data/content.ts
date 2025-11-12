@@ -29,6 +29,12 @@ export const projects = [
     img: "./img/fancy.webp"
   },
   {
+    title: "cmyk halftone emulator",
+    year: "2025",
+    links: "https://halftone.danielpetho.com",
+    img: "./img/halftone.webp"
+  },
+  {
     title: "mediapipe drawing ＊ bolt hackathon",
     year: "2025",
     links: "https://devpost.com/software/mediapipe-drawing/",
