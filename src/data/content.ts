@@ -31,7 +31,7 @@ export const projects = [
   {
     title: "cmyk halftone emulator",
     year: "2025",
-    links: "https://halftone.danielpetho.com",
+    links: "https://cmyk.danielpetho.com",
     img: "./img/halftone.webp"
   },
   {
