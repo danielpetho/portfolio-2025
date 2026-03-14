@@ -254,7 +254,9 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
       {...props}
     >
       <span className="sr-only">{text}</span>
-      <span aria-hidden="true">{renderText()}</span>
+      <span aria-hidden="true" data-nosnippet>
+        {renderText()}
+      </span>
     </motion.span>
   );
 };

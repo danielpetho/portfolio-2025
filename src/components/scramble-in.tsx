@@ -187,7 +187,9 @@ import {
       return (
         <span className="inline-block whitespace-pre-wrap">
           <span className="sr-only">{text}</span>
-          <span aria-hidden="true">{renderText()}</span>
+          <span aria-hidden="true" data-nosnippet>
+            {renderText()}
+          </span>
         </span>
       );
     }

@@ -23,8 +23,14 @@ export const experiences = [
 
 export const projects = [
   {
+    title: "slowed & reverb",
+    year: "2026",
+    links: "https://reverb.danielpetho.com",
+    img: "./img/reverb.webp"
+  },
+  {
     title: "fancycomponents.dev",
-    year: "now",
+    year: "2025",
     links: "https://fancycomponents.dev",
     img: "./img/fancy.webp"
   },
