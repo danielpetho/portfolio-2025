@@ -5,10 +5,14 @@ import { experiences, projects, socials } from "@/data/content";
 import Newsletter from "@/components/newsletter";
 import {
   getAnimationDuration,
-  ROW_DELAY,
   SCRAMBLE_SPEED,
   SCRAMBLED_LETTER_COUNT,
+  ROW_DELAY,
 } from "@/lib/utils";
+import { SuperHoverAnchor } from "@/components/super-hover-ui";
+
+const EXPERIENCE_ROW_CLASS =
+  "group justify-between border-b-2 border-b-transparent pb-0.5 md:pb-0.5 lg:pb-1 cursor-pointer md:data-[super-hover-active]:border-foreground md:data-[super-hover-active]:cursor-pointer";
 
 export default function Home() {
   return (
@@ -30,7 +34,7 @@ export default function Home() {
               </h1>
             </div>
             <div className="">
-              <h1 className="pb-0.5 md:pb-0.5 lg>pb-1">
+              <h1 className="pb-0.5 md:pb-0.5 lg:pb-1">
                 <ScrambleIn
                   delay={getAnimationDuration("daniel petho")}
                   scrambledLetterCount={SCRAMBLED_LETTER_COUNT}
@@ -39,10 +43,10 @@ export default function Home() {
                   design ✺&#xfe0e; tech ∿&#xfe0e; build ◳&#xfe0e;
                 </ScrambleIn>
               </h1>
-              <a
+              <SuperHoverAnchor
                 href="https://krea.ai"
                 target="_blank"
-                className="cursor-pointer border-b-2 border-transparent md:hover:border-foreground"
+                rel="noopener noreferrer"
               >
                 <ScrambleCombined
                   delay={getAnimationDuration("daniel petho") + ROW_DELAY}
@@ -57,7 +61,7 @@ export default function Home() {
                     </span>
                   </span>
                 </ScrambleCombined>
-              </a>
+              </SuperHoverAnchor>
             </div>
           </div>
 
@@ -117,7 +121,7 @@ export default function Home() {
                     }
                     scrambledLetterCount={SCRAMBLED_LETTER_COUNT}
                     scrambleSpeed={SCRAMBLE_SPEED}
-                    containerClassName="group justify-between border-b-2 md:hover:border-foreground border-b-transparent cursor-pointer pb-0.5 md:pb-0.5 lg:pb-1"
+                    containerClassName={EXPERIENCE_ROW_CLASS}
                   />
                 </a>
               ))}
@@ -166,7 +170,7 @@ export default function Home() {
                       showImage={true}
                       scrambledLetterCount={SCRAMBLED_LETTER_COUNT}
                       scrambleSpeed={SCRAMBLE_SPEED}
-                      containerClassName="group justify-between border-b-2 md:hover:border-foreground border-b-transparent cursor-pointer pb-0.5 md:pb-0.5 lg:pb-1"
+                      containerClassName={EXPERIENCE_ROW_CLASS}
                     />
                   </a>
                 </li>
@@ -199,11 +203,11 @@ export default function Home() {
               <br />
               {socials.map((social, index) => (
                 <li key={index}>
-                  <a
+                  <SuperHoverAnchor
                     href={social.links}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="cursor-pointer border-b-2 border-b-transparent md:hover:border-foreground pb-0.5 md:pb-0.5 lg:pb-1 inline-block"
+                    className="pb-0.5 md:pb-0.5 lg:pb-1"
                   >
                     <ScrambleCombined
                       delay={
@@ -219,7 +223,7 @@ export default function Home() {
                         ↗
                       </span>
                     </ScrambleCombined>
-                  </a>
+                  </SuperHoverAnchor>
                 </li>
               ))}
             </ul>

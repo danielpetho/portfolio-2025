@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ScrambleIn from "./scramble-in";
 import ScrambleCombined from "./scramble-combined";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import {
   getAnimationDuration,
   SCRAMBLE_SPEED,

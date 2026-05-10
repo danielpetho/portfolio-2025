@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, forwardRef } from "react";
+import { useSuperHoverRef } from "super-hover/react";
 import ScrambleHover from "./scramble-hover";
 import ScrambleIn, { ScrambleInHandle } from "./scramble-in";
 
@@ -45,11 +46,17 @@ const ScrambleCombinedPair = forwardRef<
     const [isHovering, setIsHovering] = useState(false);
     const bothComplete = leftComplete && rightComplete;
 
+    const rowSuperHoverRef = useSuperHoverRef({
+      enabled: bothComplete,
+      onEnter: () => setIsHovering(true),
+      onLeave: () => setIsHovering(false),
+    });
+
     return (
       <div
+        ref={rowSuperHoverRef}
+        data-super-hover
         className={containerClassName}
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
       >
         {bothComplete ? (
           <div className="flex justify-between w-full relative flex-1 whitespace-pre">

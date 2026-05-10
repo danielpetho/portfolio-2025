@@ -3,11 +3,13 @@
 import {
   useState,
   useEffect,
+  useContext,
   Children,
   isValidElement,
   cloneElement,
 } from "react";
-import { motion } from "motion/react";
+import { useSuperHoverRef } from "super-hover/react";
+import { SuperHoverParentContext } from "@/components/super-hover-context";
 import { cn } from "@/lib/utils";
 
 interface ScrambleHoverProps {
@@ -62,21 +64,26 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
   const [internalHovering, setInternalHovering] = useState(false);
   const [revealedIndices] = useState(new Set<number>());
 
-  const isHovering = useInternalHover ? internalHovering : isHoveringProp;
+  const parentSuperHover = useContext(SuperHoverParentContext);
+  const syncedToParentHover = parentSuperHover !== null;
 
-  const handleHoverStart = () => {
-    if (useInternalHover) {
+  const fallbackHover =
+    useInternalHover ? internalHovering : Boolean(isHoveringProp);
+  const isHovering = syncedToParentHover
+    ? parentSuperHover!.active
+    : fallbackHover;
+
+  const superHoverRef = useSuperHoverRef({
+    enabled: useInternalHover && !syncedToParentHover,
+    onEnter: () => {
       setInternalHovering(true);
-    }
-    onHoverChange?.(true);
-  };
-
-  const handleHoverEnd = () => {
-    if (useInternalHover) {
+      onHoverChange?.(true);
+    },
+    onLeave: () => {
       setInternalHovering(false);
-    }
-    onHoverChange?.(false);
-  };
+      onHoverChange?.(false);
+    },
+  });
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -247,9 +254,9 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
   };
 
   return (
-    <motion.span
-      onHoverStart={handleHoverStart}
-      onHoverEnd={handleHoverEnd}
+    <span
+      ref={useInternalHover ? superHoverRef : undefined}
+      {...(useInternalHover ? ({ "data-super-hover": "" } as const) : {})}
       className={cn("inline-block whitespace-pre-wrap", className)}
       {...props}
     >
@@ -257,7 +264,7 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
       <span aria-hidden="true" data-nosnippet>
         {renderText()}
       </span>
-    </motion.span>
+    </span>
   );
 };
 
