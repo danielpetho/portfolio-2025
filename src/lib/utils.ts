@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const ROW_DELAY = 30;
-export const SCRAMBLE_SPEED = 27;
+export const SCRAMBLE_SPEED = 24;
 export const SCRAMBLED_LETTER_COUNT = 5;
 
 export const getAnimationDuration = (text: string) => {

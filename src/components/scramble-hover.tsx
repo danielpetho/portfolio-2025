@@ -3,6 +3,7 @@
 import {
   useState,
   useEffect,
+  useRef,
   useContext,
   Children,
   isValidElement,
@@ -85,9 +86,12 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
     },
   });
 
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prevHoveredRef = useRef(false);
+  const iterationRef = useRef(0);
+
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    let currentIteration = 0;
+    const wasHovered = prevHoveredRef.current;
 
     const getNextIndex = () => {
       const textLength = text.length;
@@ -96,7 +100,7 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
           return revealedIndices.size;
         case "end":
           return textLength - 1 - revealedIndices.size;
-        case "center":
+        case "center": {
           const middle = Math.floor(textLength / 2);
           const offset = Math.floor(revealedIndices.size / 2);
           const nextIndex =
@@ -116,14 +120,19 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
             if (!revealedIndices.has(i)) return i;
           }
           return 0;
+        }
         default:
           return revealedIndices.size;
       }
     };
 
-    const shuffleText = (text: string) => {
+    const availableChars = useOriginalCharsOnly
+      ? Array.from(new Set(text.split(""))).filter((char) => char !== " ")
+      : characters.split("");
+
+    const shuffleText = (plain: string) => {
       if (useOriginalCharsOnly) {
-        const positions = text.split("").map((char, i) => ({
+        const positions = plain.split("").map((char, i) => ({
           char,
           isSpace: char === " ",
           index: i,
@@ -134,7 +143,6 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
           .filter((p) => !p.isSpace && !p.isRevealed)
           .map((p) => p.char);
 
-        // Shuffle remaining non-revealed, non-space characters
         for (let i = nonSpaceChars.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [nonSpaceChars[i], nonSpaceChars[j]] = [
@@ -147,58 +155,67 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
         return positions
           .map((p) => {
             if (p.isSpace) return " ";
-            if (p.isRevealed) return text[p.index];
+            if (p.isRevealed) return plain[p.index];
             return nonSpaceChars[charIndex++];
           })
           .join("");
-      } else {
-        return text
-          .split("")
-          .map((char, i) => {
-            if (char === " ") return " ";
-            if (revealedIndices.has(i)) return text[i];
-            return availableChars[
-              Math.floor(Math.random() * availableChars.length)
-            ];
-          })
-          .join("");
       }
+
+      return plain
+        .split("")
+        .map((char, i) => {
+          if (char === " ") return " ";
+          if (revealedIndices.has(i)) return plain[i];
+          return availableChars[
+            Math.floor(Math.random() * availableChars.length)
+          ];
+        })
+        .join("");
     };
 
-    const availableChars = useOriginalCharsOnly
-      ? Array.from(new Set(text.split(""))).filter((char) => char !== " ")
-      : characters.split("");
-
-    if (isHovering) {
+    const startOrRestartSession = () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      iterationRef.current = 0;
+      revealedIndices.clear();
       setIsScrambling(true);
-      interval = setInterval(() => {
+
+      intervalRef.current = setInterval(() => {
         if (sequential) {
           if (revealedIndices.size < text.length) {
             const nextIndex = getNextIndex();
             revealedIndices.add(nextIndex);
             setDisplayText(shuffleText(text));
           } else {
-            clearInterval(interval);
+            if (intervalRef.current !== null) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
             setIsScrambling(false);
           }
         } else {
           setDisplayText(shuffleText(text));
-          currentIteration++;
-          if (currentIteration >= maxIterations) {
-            clearInterval(interval);
-            setIsScrambling(false);
+          iterationRef.current += 1;
+          if (iterationRef.current >= maxIterations) {
+            if (intervalRef.current !== null) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+            iterationRef.current = 0;
             setDisplayText(text);
+            setIsScrambling(false);
           }
         }
       }, scrambleSpeed);
-    } else {
-      setDisplayText(text);
-      revealedIndices.clear();
+    };
+
+    if (isHovering && !wasHovered) {
+      startOrRestartSession();
     }
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
+    prevHoveredRef.current = Boolean(isHovering);
   }, [
     isHovering,
     text,
@@ -210,6 +227,24 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
     maxIterations,
   ]);
 
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      iterationRef.current = 0;
+      revealedIndices.clear();
+    };
+  }, []);
+
+  /** Source text sync when idle (avoid fighting an in-flight scratch) */
+  useEffect(() => {
+    if (intervalRef.current === null && !isScrambling) {
+      setDisplayText(text);
+    }
+  }, [text, isScrambling]);
+
   const renderText = () => {
     let currentIndex = 0;
 
@@ -219,21 +254,23 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
         const nodeLength = nodeText.length;
         const chars = displayText
           .slice(currentIndex, currentIndex + nodeLength)
-          .split('');
-        const result = chars.map((char, i) => (
-          <span
-            key={currentIndex + i}
-            className={cn(
-              revealedIndices.has(currentIndex + i) ||
-                !isScrambling ||
-                !isHovering
-                ? className
-                : scrambledClassName
-            )}
-          >
-            {char}
-          </span>
-        ));
+          .split("");
+        const result = chars.map((char, charOffset) => {
+          const idx = currentIndex + charOffset;
+          const revealedOrIdle = sequential
+            ? revealedIndices.has(idx) || !isScrambling
+            : !isScrambling;
+          return (
+            <span
+              key={idx}
+              className={cn(
+                revealedOrIdle ? className : scrambledClassName ?? className,
+              )}
+            >
+              {char}
+            </span>
+          );
+        });
         currentIndex += nodeLength;
         return result;
       }
