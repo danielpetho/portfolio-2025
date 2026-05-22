@@ -84,6 +84,9 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
     },
   });
 
+  const attachLocalSuperHoverTarget =
+    useInternalHover && !syncedToParentHover;
+
   useEffect(() => {
     let intervalId: ReturnType<typeof setInterval> | undefined;
     let currentIteration = 0;
@@ -262,8 +265,10 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
 
   return (
     <span
-      ref={useInternalHover ? superHoverRef : undefined}
-      {...(useInternalHover ? ({ "data-super-hover": "" } as const) : {})}
+      ref={attachLocalSuperHoverTarget ? superHoverRef : undefined}
+      {...(attachLocalSuperHoverTarget
+        ? ({ "data-super-hover": "" } as const)
+        : {})}
       className={cn("inline-block whitespace-pre-wrap", className)}
       {...props}
     >
