@@ -18,7 +18,7 @@
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "resend": "^6.12.0",
-    "super-hover": "^0.0.3",
+    "super-hover": "^0.1.0",
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {

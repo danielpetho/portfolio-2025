@@ -3,7 +3,6 @@
 import {
   useState,
   useEffect,
-  useRef,
   useContext,
   Children,
   isValidElement,
@@ -30,16 +29,16 @@ interface ScrambleHoverProps {
 
 const extractTextFromChildren = (children: React.ReactNode): string => {
   return Children.toArray(children)
-    .map(child => {
-      if (typeof child === 'string') return child;
-      if (typeof child === 'number') return String(child);
+    .map((child) => {
+      if (typeof child === "string") return child;
+      if (typeof child === "number") return String(child);
       if (isValidElement(child)) {
         // @ts-expect-error - child.props.children may not exist on all React element types,
         return extractTextFromChildren(child.props.children);
       }
-      return '';
+      return "";
     })
-    .join('');
+    .join("");
 };
 
 const ScrambleHover: React.FC<ScrambleHoverProps> = ({
@@ -57,13 +56,12 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
   useInternalHover = false,
   ...props
 }) => {
-  // Replace existing text extraction
   const text = extractTextFromChildren(children);
 
   const [displayText, setDisplayText] = useState(text);
   const [isScrambling, setIsScrambling] = useState(false);
   const [internalHovering, setInternalHovering] = useState(false);
-  const [revealedIndices] = useState(new Set<number>());
+  const [revealedIndices] = useState(() => new Set<number>());
 
   const parentSuperHover = useContext(SuperHoverParentContext);
   const syncedToParentHover = parentSuperHover !== null;
@@ -86,12 +84,9 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
     },
   });
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const prevHoveredRef = useRef(false);
-  const iterationRef = useRef(0);
-
   useEffect(() => {
-    const wasHovered = prevHoveredRef.current;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+    let currentIteration = 0;
 
     const getNextIndex = () => {
       const textLength = text.length;
@@ -173,49 +168,37 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
         .join("");
     };
 
-    const startOrRestartSession = () => {
-      if (intervalRef.current !== null) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      iterationRef.current = 0;
-      revealedIndices.clear();
+    if (isHovering) {
       setIsScrambling(true);
-
-      intervalRef.current = setInterval(() => {
+      intervalId = setInterval(() => {
         if (sequential) {
           if (revealedIndices.size < text.length) {
             const nextIndex = getNextIndex();
             revealedIndices.add(nextIndex);
             setDisplayText(shuffleText(text));
           } else {
-            if (intervalRef.current !== null) {
-              clearInterval(intervalRef.current);
-              intervalRef.current = null;
-            }
+            if (intervalId) clearInterval(intervalId);
             setIsScrambling(false);
           }
         } else {
           setDisplayText(shuffleText(text));
-          iterationRef.current += 1;
-          if (iterationRef.current >= maxIterations) {
-            if (intervalRef.current !== null) {
-              clearInterval(intervalRef.current);
-              intervalRef.current = null;
-            }
-            iterationRef.current = 0;
-            setDisplayText(text);
+          currentIteration += 1;
+          if (currentIteration >= maxIterations) {
+            if (intervalId) clearInterval(intervalId);
             setIsScrambling(false);
+            setDisplayText(text);
           }
         }
       }, scrambleSpeed);
-    };
-
-    if (isHovering && !wasHovered) {
-      startOrRestartSession();
+    } else {
+      setDisplayText(text);
+      revealedIndices.clear();
+      setIsScrambling(false);
     }
 
-    prevHoveredRef.current = Boolean(isHovering);
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [
     isHovering,
     text,
@@ -227,29 +210,11 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
     maxIterations,
   ]);
 
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current !== null) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      iterationRef.current = 0;
-      revealedIndices.clear();
-    };
-  }, []);
-
-  /** Source text sync when idle (avoid fighting an in-flight scratch) */
-  useEffect(() => {
-    if (intervalRef.current === null && !isScrambling) {
-      setDisplayText(text);
-    }
-  }, [text, isScrambling]);
-
   const renderText = () => {
     let currentIndex = 0;
 
     const processNode = (node: React.ReactNode): React.ReactNode => {
-      if (typeof node === 'string' || typeof node === 'number') {
+      if (typeof node === "string" || typeof node === "number") {
         const nodeText = String(node);
         const nodeLength = nodeText.length;
         const chars = displayText
@@ -257,14 +222,17 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
           .split("");
         const result = chars.map((char, charOffset) => {
           const idx = currentIndex + charOffset;
-          const revealedOrIdle = sequential
-            ? revealedIndices.has(idx) || !isScrambling
-            : !isScrambling;
+          const revealedOrIdle =
+            revealedIndices.has(idx) ||
+            !isScrambling ||
+            !isHovering;
           return (
             <span
               key={idx}
               className={cn(
-                revealedOrIdle ? className : scrambledClassName ?? className,
+                revealedOrIdle
+                  ? className
+                  : scrambledClassName ?? className,
               )}
             >
               {char}
@@ -280,14 +248,16 @@ const ScrambleHover: React.FC<ScrambleHoverProps> = ({
           // @ts-expect-error - node.props.children may not exist on all React element types,
           ...node.props,
           // @ts-expect-error - node.props may not exist on all React element types,
-          children: Children.map(node.props.children, child => processNode(child))
+          children: Children.map(node.props.children, (child) =>
+            processNode(child),
+          ),
         });
       }
 
       return node;
     };
 
-    return Children.map(children, child => processNode(child));
+    return Children.map(children, (child) => processNode(child));
   };
 
   return (
