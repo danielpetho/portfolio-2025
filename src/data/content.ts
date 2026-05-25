@@ -23,6 +23,12 @@ export const experiences = [
 
 export const projects = [
   {
+    title: "super hover",
+    year: "2026",
+    links: "https://super-hover.danielpetho.com",
+    img: "./img/superhover.webp"
+  },
+  {
     title: "slowed & reverb",
     year: "2026",
     links: "https://reverb.danielpetho.com",
