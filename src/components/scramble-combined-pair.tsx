@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, forwardRef } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { useSuperHoverRef } from "super-hover/react";
+import { cn } from "@/lib/utils";
 import ScrambleHover from "./scramble-hover";
 import ScrambleIn, { ScrambleInHandle } from "./scramble-in";
 
@@ -44,7 +45,12 @@ const ScrambleCombinedPair = forwardRef<
     const [leftComplete, setLeftComplete] = useState(false);
     const [rightComplete, setRightComplete] = useState(false);
     const [isHovering, setIsHovering] = useState(false);
+    const [thumbnailWarm, setThumbnailWarm] = useState(false);
     const bothComplete = leftComplete && rightComplete;
+
+    useEffect(() => {
+      if (isHovering && showImage && img) setThumbnailWarm(true);
+    }, [isHovering, showImage, img]);
 
     const rowSuperHoverRef = useSuperHoverRef({
       enabled: bothComplete,
@@ -71,15 +77,22 @@ const ScrambleCombinedPair = forwardRef<
               {leftText}
             </ScrambleHover>
 
-            {isHovering && showImage && (
-              <div className="hidden md:flex sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 xl:w-36 xl:h-36 sm:right-0 md:right-[12%] bottom-0 absolute">
+            {thumbnailWarm && showImage && img ? (
+              <div
+                className={cn(
+                  "pointer-events-none hidden md:flex sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 xl:w-36 xl:h-36 sm:right-0 md:right-[12%] bottom-0 absolute",
+                  isHovering ? "opacity-100" : "opacity-0 invisible",
+                )}
+                aria-hidden={!isHovering}
+              >
                 <img
-                  src={img!}
-                  alt={imgAlt!}
+                  src={img}
+                  alt={imgAlt ?? ""}
                   className="absolute right-0 top-0 h-full w-full object-cover"
+                  decoding="async"
                 />
               </div>
-            )}
+            ) : null}
 
             <ScrambleHover
               scrambleSpeed={scrambleSpeed * 1.3}
